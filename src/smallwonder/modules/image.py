@@ -87,11 +87,14 @@ def enable(cfg: Config) -> list[str]:
     _l.kickstart("litellm")
 
     try:
+        from smallwonder import openwebui_tool
         from smallwonder.openwebui import OpenWebUI
 
-        OpenWebUI(cfg).enable_image_generation(
-            f"http://127.0.0.1:{cfg.ports['image_shim']}/v1"
-        )
+        ui = OpenWebUI(cfg)
+        shim_base = f"http://127.0.0.1:{cfg.ports['image_shim']}/v1"
+        ui.enable_image_generation(shim_base)
+        # ChatGPT-style agentic image gen: models call the tool themselves
+        openwebui_tool.register(ui, shim_base, ["auto", "general", "fast", "coder"])
     except Exception:
         steps.append(
             "Open WebUI image config could not be set automatically "
