@@ -61,6 +61,17 @@ class OpenWebUI:
         r = self.post("/api/v1/images/config/update", json=current)
         r.raise_for_status()
 
+    # --- task model ----------------------------------------------------------
+    def set_task_model(self, model_id: str) -> None:
+        """Route background tasks (tool selection, titles, tags) to a fast
+        model. Without this they run on the chat model itself — a thinking
+        35B doing tool selection adds minutes of latency per tool call."""
+        current = self.get("/api/v1/tasks/config").json()
+        current["TASK_MODEL"] = model_id
+        current["TASK_MODEL_EXTERNAL"] = model_id
+        r = self.post("/api/v1/tasks/config/update", json=current)
+        r.raise_for_status()
+
     # --- knowledge (RAG collections) ----------------------------------------
     def find_or_create_knowledge(self, name: str, description: str) -> str:
         r = self.get("/api/v1/knowledge/")

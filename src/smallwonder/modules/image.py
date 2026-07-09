@@ -95,6 +95,9 @@ def enable(cfg: Config) -> list[str]:
         ui.enable_image_generation(shim_base)
         # ChatGPT-style agentic image gen: models call the tool themselves
         openwebui_tool.register(ui, shim_base, ["auto", "general", "fast", "coder"])
+        # tool selection/titles on the fast model, or every tool call pays
+        # two slow thinking-model passes
+        ui.set_task_model("fast")
     except Exception:
         steps.append(
             "Open WebUI image config could not be set automatically "

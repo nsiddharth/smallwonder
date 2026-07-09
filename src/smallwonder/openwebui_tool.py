@@ -11,14 +11,32 @@ TOOL_NAME = "Image Studio"
 # NOTE: docstrings below become the tool spec the model sees — treat them as
 # prompts. {shim_base} is filled in at registration time.
 TOOL_CONTENT = '''
+import base64
 import requests
+
+from open_webui.models.users import Users
+from open_webui.routers.images import upload_image
+
+
+async def _show_image(raw_png, __request__, __user__, __event_emitter__):
+    """Store the image as an Open WebUI file and emit a lightweight
+    reference. NEVER inline base64 into chat content — it becomes part of
+    the conversation history and overflows the model context on the next
+    turn."""
+    user = Users.get_user_by_id(__user__["id"])
+    url = upload_image(__request__, raw_png, "image/png", {}, user)
+    await __event_emitter__(
+        {"type": "files", "data": {"files": [{"type": "image", "url": url}]}}
+    )
 
 
 class Tools:
     def __init__(self):
         self.citation = False
 
-    async def generate_image(self, prompt: str, __event_emitter__=None) -> str:
+    async def generate_image(
+        self, prompt: str, __request__=None, __user__=None, __event_emitter__=None
+    ) -> str:
         """
         Generate an image from a text description using the local image model.
         Use this whenever the user asks you to create, draw, generate, paint,
@@ -50,17 +68,14 @@ class Tools:
                 "engine may be off — they can run `smallwonder doctor`."
             )
         if __event_emitter__:
-            await __event_emitter__(
-                {"type": "message",
-                 "data": {"content": f"\\n![generated image](data:image/png;base64,{b64})\\n"}}
-            )
+            await _show_image(base64.b64decode(b64), __request__, __user__, __event_emitter__)
             await __event_emitter__(
                 {"type": "status", "data": {"description": "Image ready", "done": True}}
             )
         return (
-            "The image was generated and is already displayed in the chat. "
-            "Briefly (one sentence) tell the user what you created. Do NOT "
-            "output the image data yourself."
+            "SUCCESS. The image was generated and is already visible to the "
+            "user in this chat. Reply with one short sentence describing it. "
+            "Never say you cannot create images — you just did."
         )
 
     async def edit_image(
@@ -69,6 +84,8 @@ class Tools:
         strength: float = 0,
         __messages__=None,
         __files__=None,
+        __request__=None,
+        __user__=None,
         __event_emitter__=None,
     ) -> str:
         """
@@ -146,17 +163,15 @@ class Tools:
                 "may be off — they can run `smallwonder doctor`."
             )
         if __event_emitter__:
-            await __event_emitter__(
-                {"type": "message",
-                 "data": {"content": f"\\n![edited image](data:image/png;base64,{b64})\\n"}}
-            )
+            await _show_image(base64.b64decode(b64), __request__, __user__, __event_emitter__)
             await __event_emitter__(
                 {"type": "status", "data": {"description": "Edit ready", "done": True}}
             )
         return (
-            "The edited image was created and is already displayed in the "
-            "chat. Briefly (one sentence) describe the edit you made. Do NOT "
-            "output the image data yourself."
+            "SUCCESS. The photo was edited as requested and the result is "
+            "already visible to the user in this chat. Reply with one short "
+            "sentence describing the edit. Never say you cannot edit images "
+            "— you just did."
         )
 '''
 
