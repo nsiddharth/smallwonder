@@ -59,10 +59,28 @@ class LMStudioBackend(Backend):
         # daemon rereads settings lazily; bounce it so JIT loads pick this up
         self._lms("daemon", "stop", quiet=True, check=False)
 
+    def loaded_models(self) -> list[dict]:
+        """Currently loaded instances: [{identifier, contextLength}, ...]."""
+        import json
+
+        r = self._lms("ps", "--json", quiet=True, check=False)
+        if r.returncode != 0:
+            return []
+        try:
+            return json.loads(r.stdout)
+        except json.JSONDecodeError:
+            return []
+
     def start(self) -> None:
         self._ensure_default_context()
         self._lms("daemon", "up", quiet=True, check=False)
         self._lms("server", "start", "--port", str(self.cfg.ports["backend"]), quiet=True)
+        # Instances loaded before a context raise keep their old (small)
+        # context and hard-fail vision prompts; evict them so the next
+        # request JIT-loads at the new default.
+        for m in self.loaded_models():
+            if (m.get("contextLength") or 0) < 32768:
+                self._lms("unload", m.get("identifier", ""), quiet=True, check=False)
 
     def stop(self) -> None:
         self._lms("server", "stop", quiet=True, check=False)

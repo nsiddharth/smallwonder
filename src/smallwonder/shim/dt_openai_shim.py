@@ -110,10 +110,21 @@ async def edits(
     size: str | None = Form(None),
     model: str | None = Form(None),           # accepted and ignored
     response_format: str | None = Form("b64_json"),
-    strength: float = Form(0.75),             # non-standard: how much to change
+    strength: float | None = Form(None),      # non-standard: how much to change
 ):
     """OpenAI images-edit contract (multipart, as Open WebUI sends it),
-    backed by Draw Things img2img. First image is the init image."""
+    backed by Draw Things img2img. First image is the init image.
+
+    strength default depends on the active model: instruction-edit models
+    (FLUX klein/Kontext, Qwen-Image-Edit) read the init image as a reference
+    and need 1.0; classic img2img models regenerate from noise and want a
+    partial strength (0.75)."""
+    if strength is None:
+        active = (
+            requests.get(f"{DRAW_THINGS}/sdapi/v1/options", timeout=5).json().get("model") or ""
+        ).lower()
+        is_edit_model = any(k in active for k in ("klein", "kontext", "edit", "flux_2"))
+        strength = 1.0 if is_edit_model else 0.75
     raw = await image[0].read()
     init = base64.b64encode(raw).decode()
     payload = {
