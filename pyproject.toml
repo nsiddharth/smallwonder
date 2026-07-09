@@ -1,0 +1,56 @@
+[project]
+name = "smallwonder"
+version = "0.1.0"
+description = "A troupe of small local models on your Mac that act like one big one — coding, chat, vision, images. One command, fully private."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Sid", email = "n.siddharth@gmail.com" }]
+requires-python = ">=3.11"
+keywords = ["llm", "local-ai", "mlx", "apple-silicon", "litellm", "open-webui"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: MacOS X",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.7",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "httpx>=0.27",
+    "feedparser>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/nsiddharth/smallwonder"
+Issues = "https://github.com/nsiddharth/smallwonder/issues"
+
+[project.scripts]
+smallwonder = "smallwonder.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smallwonder"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/smallwonder/tiers.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

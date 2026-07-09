@@ -1,0 +1,43 @@
+{
+  "encoder_type": "litellm",
+  "encoder_name": "openai/{{ models["embed"] }}",
+  "routes": [
+    {
+      "name": "coder",
+      "utterances": [
+        "write a python function that parses this file",
+        "fix this bug in my code",
+        "refactor this class to use dependency injection",
+        "why is this test failing",
+        "build a react component for a settings page",
+        "write a sql query to find duplicate rows",
+        "implement a rate limiter in go",
+        "review this pull request diff",
+        "add error handling to this script",
+        "convert this bash script to python",
+        "help me debug this stack trace",
+        "scaffold a new fastapi project"
+      ],
+      "description": "programming, debugging, code review, building applications",
+      "score_threshold": 0.46,
+      "metadata": {}
+    },
+    {
+      "name": "fast",
+      "utterances": [
+        "what's the capital of france",
+        "give me a synonym for happy",
+        "translate this sentence to spanish",
+        "summarize this paragraph in one line",
+        "how many grams in an ounce",
+        "spell check this sentence",
+        "what does this acronym stand for",
+        "convert 10 kilometers to miles",
+        "what year did world war two end"
+      ],
+      "description": "trivial lookups, one-liners, quick transformations",
+      "score_threshold": 0.55,
+      "metadata": {}
+    }
+  ]
+}

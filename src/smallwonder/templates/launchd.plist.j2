@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key><string>{{ label }}</string>
+    <key>ProgramArguments</key>
+    <array>
+{% for arg in args %}
+        <string>{{ arg }}</string>
+{% endfor %}
+    </array>
+{% if working_dir %}
+    <key>WorkingDirectory</key><string>{{ working_dir }}</string>
+{% endif %}
+{% if env %}
+    <key>EnvironmentVariables</key>
+    <dict>
+{% for k, v in env.items() %}
+        <key>{{ k }}</key><string>{{ v }}</string>
+{% endfor %}
+    </dict>
+{% endif %}
+{% if calendar %}
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>{{ calendar.hour }}</integer>
+        <key>Minute</key><integer>{{ calendar.get("minute", 0) }}</integer>
+    </dict>
+{% else %}
+    <key>RunAtLoad</key><true/>
+{% endif %}
+{% if keep_alive %}
+    <key>KeepAlive</key><true/>
+{% endif %}
+    <key>StandardOutPath</key><string>{{ log_path }}</string>
+    <key>StandardErrorPath</key><string>{{ log_path }}</string>
+</dict>
+</plist>

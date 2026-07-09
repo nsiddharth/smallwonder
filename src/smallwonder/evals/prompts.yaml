@@ -1,0 +1,41 @@
+# Golden smoke-test set. Run with: scripts/run-evals.sh
+# Grows every time we find a failure. Each case: role → prompt → what to look for.
+
+- role: coder
+  name: fizzbuzz-twist
+  prompt: "Write a Python function fizzbuzz(n) that returns a list, but multiples of 7 return 'boom' (beating fizz/buzz rules). Include 3 pytest tests."
+  expect: "runnable code, boom precedence handled, tests present"
+
+- role: coder
+  name: debug-off-by-one
+  prompt: "This returns 4 for [1,2,3,4,5], k=2 but should return 3: def kth_largest(a,k): return sorted(a)[k]. Fix it and explain the bug in one sentence."
+  expect: "sorted(a)[-k] or reverse sort; identifies ascending-order indexing bug"
+
+- role: general
+  name: reasoning-schedule
+  prompt: "Alice, Bob, Carol each give one talk Mon-Wed. Alice can't do Mon. Bob must present the day right before Carol. Who presents when?"
+  expect: "Bob Mon, Carol Tue, Alice Wed"
+
+- role: general
+  name: explain-tradeoff
+  prompt: "In two short paragraphs: when would you pick SQLite over Postgres for a production web app, and what's the biggest risk?"
+  expect: "single-writer/embedded reasoning, concurrency risk"
+
+- role: fast
+  name: quick-fact
+  prompt: "Capital of Australia, one word."
+  expect: "Canberra"
+
+- role: auto
+  name: routes-to-coder
+  prompt: "Write a bash one-liner to find the 10 largest files under the current directory."
+  expect: "routed to coder (check litellm log), du/find/sort answer"
+
+- role: auto
+  name: routes-to-general
+  prompt: "What are the main arguments for and against remote work?"
+  expect: "routed to general (default), coherent essay"
+
+# vision: run manually in Open WebUI — attach any chart screenshot to `general`
+# and ask "what does this chart show?"
+# image: in Open WebUI, prompt "generate an image of a lighthouse at dawn" (Draw Things)
