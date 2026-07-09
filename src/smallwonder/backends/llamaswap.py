@@ -30,13 +30,13 @@ class LlamaSwapBackend(Backend):
         return bool(_which("llama-swap") and _which("llama-server"))
 
     def install(self) -> None:
-        missing = [b for b, f in [("llama-server", "llama.cpp"), ("llama-swap", "llama-swap")]
-                   if not _which(b)]
-        formulas = {"llama-server": "llama.cpp", "llama-swap": "llama-swap"}
+        formulas = {
+            "llama-server": "llama.cpp",
+            "llama-swap": "mostlygeek/llama-swap/llama-swap",
+        }
+        missing = [formulas[b] for b in formulas if not _which(b)]
         if missing:
-            subprocess.run(
-                ["brew", "install", *{formulas[b] for b in missing}], check=True
-            )
+            subprocess.run(["brew", "install", *missing], check=True)
 
     def render_config(self) -> str:
         cfg_path = RENDER_DIR / "llama-swap.yaml"
