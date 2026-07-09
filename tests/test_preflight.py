@@ -4,11 +4,12 @@ from smallwonder.config import Config
 PORTS = Config().ports
 
 
-def test_passes_on_this_machine(monkeypatch):
-    # CI runs on macOS arm64 runners; the only expected variable is uv/ports
+def test_passes_on_compatible_system(monkeypatch):
+    # CI runners vary (macos-14 has 7GB RAM), so control every input:
+    # a compatible system must produce zero failures.
     monkeypatch.setattr(preflight.shutil, "which", lambda _: "/usr/local/bin/uv")
     monkeypatch.setattr(preflight, "_port_free_or_ours", lambda p: (True, ""))
-    failures = preflight.check(PORTS)
+    failures = preflight.check(PORTS, min_ram_gb=1)
     assert failures == []
 
 
