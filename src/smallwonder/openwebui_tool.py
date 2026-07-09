@@ -111,11 +111,25 @@ class Tools:
                  "data": {"description": "Editing image locally…", "done": False}}
             )
         header, b64_in = source.split(",", 1)
-        ext = "png" if "png" in header else "jpeg"
+        raw = __import__("base64").b64decode(b64_in)
+        # Downscale big photos (a 12MP camera shot would take >10min to
+        # render); ~1MP is the sweet spot for edits. Dimensions must be
+        # multiples of 64 for the diffusion canvas.
+        import io
+        from PIL import Image
+        img = Image.open(io.BytesIO(raw)).convert("RGB")
+        scale = min(1.0, 1024 / max(img.size))
+        w = max(320, int(img.width * scale) // 64 * 64)
+        h = max(320, int(img.height * scale) // 64 * 64)
+        if (w, h) != img.size:
+            img = img.resize((w, h), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        raw = buf.getvalue()
         try:
             r = requests.post(
                 "{shim_base}/images/edits",
-                files={"image": (f"input.{ext}", __import__("base64").b64decode(b64_in))},
+                files={"image": ("input.png", raw)},
                 data={"prompt": prompt, **({"strength": strength} if strength else {})},
                 timeout=600,
             )

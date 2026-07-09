@@ -141,6 +141,12 @@ async def edits(
         # so default to the source image's own dimensions.
         w, h = _image_dimensions(raw)
     if w and h:
+        if w * h > 1_800_000:  # >~1.7MP renders for many minutes on this class of hardware
+            raise HTTPException(
+                status_code=400,
+                detail=f"image is {w}x{h}; resize to ~1024px on the long side "
+                "before editing (large canvases take 10+ minutes)",
+            )
         payload["width"], payload["height"] = w, h
     r = requests.post(f"{DRAW_THINGS}/sdapi/v1/img2img", json=payload, timeout=600)
     if r.status_code != 200:
