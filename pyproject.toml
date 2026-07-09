@@ -28,6 +28,9 @@ dependencies = [
     "feedparser>=6.0",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "fastapi>=0.115", "requests>=2.32", "httpx>=0.27", "python-multipart>=0.0.9"]
+
 [project.urls]
 Homepage = "https://github.com/nsiddharth/smallwonder"
 Issues = "https://github.com/nsiddharth/smallwonder/issues"
