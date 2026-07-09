@@ -30,7 +30,7 @@ TIERS: dict[str, dict[str, ModelSpec]] = {
     },
     "32gb": {
         "coder":   ModelSpec("qwen/qwen3-coder-30b",  "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M", 18.6),
-        "general": ModelSpec("google/gemma-4-26b-a4b", "unsloth/Gemma-4-26B-A4B-GGUF:Q4_K_M", 15.0),
+        "general": ModelSpec("google/gemma-4-26b-a4b", "unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_0", 15.0),
         "fast":    ModelSpec("qwen/qwen3.5-4b",       "unsloth/Qwen3.5-4B-GGUF:Q4_K_M", 3.1),
     },
     "48gb": {
