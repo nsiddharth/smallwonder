@@ -119,12 +119,17 @@ async def edits(
     (FLUX klein/Kontext, Qwen-Image-Edit) read the init image as a reference
     and need 1.0; classic img2img models regenerate from noise and want a
     partial strength (0.75)."""
-    if strength is None:
-        active = (
-            requests.get(f"{DRAW_THINGS}/sdapi/v1/options", timeout=5).json().get("model") or ""
-        ).lower()
-        is_edit_model = any(k in active for k in ("klein", "kontext", "edit", "flux_2"))
-        strength = 1.0 if is_edit_model else 0.75
+    active = (
+        requests.get(f"{DRAW_THINGS}/sdapi/v1/options", timeout=5).json().get("model") or ""
+    ).lower()
+    is_edit_model = any(k in active for k in ("klein", "kontext", "edit", "flux_2"))
+    if is_edit_model:
+        # Instruction-edit models read the init image as a reference; any
+        # denoising below 1.0 returns a near-copy of the source. Magnitude
+        # is expressed in the prompt, not the strength knob.
+        strength = 1.0
+    elif strength is None:
+        strength = 0.75
     raw = await image[0].read()
     init = base64.b64encode(raw).decode()
     payload = {

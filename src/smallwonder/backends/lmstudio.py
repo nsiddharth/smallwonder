@@ -57,6 +57,7 @@ class LMStudioBackend(Backend):
         if current >= tokens:
             return
         settings["defaultContextLength"] = {"type": "custom", "value": tokens}
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(settings, indent=2))
         # daemon rereads settings lazily; bounce it so JIT loads pick this up
         self._lms("daemon", "stop", quiet=True, check=False)

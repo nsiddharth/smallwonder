@@ -81,7 +81,6 @@ class Tools:
     async def edit_image(
         self,
         prompt: str,
-        strength: float = 0,
         __messages__=None,
         __files__=None,
         __request__=None,
@@ -94,8 +93,7 @@ class Tools:
         edit, change, restyle, retouch or transform a photo or image they
         uploaded (e.g. "give him a haircut", "make it night", "turn this into
         a watercolor").
-        :param prompt: The edit instruction, phrased as the change to make (e.g. "give the man a short neat haircut", "make it nighttime").
-        :param strength: Leave at 0 (auto) unless the user asks for a subtle (0.3) or partial (0.6) change.
+        :param prompt: The edit instruction, phrased as the change to make. Include the desired magnitude in words (e.g. "subtly tidy up his hair" vs "give him a completely different short haircut").
         """
         # Find the most recent image the user attached (multimodal message
         # content first, then chat file attachments).
@@ -147,7 +145,7 @@ class Tools:
             r = requests.post(
                 "{shim_base}/images/edits",
                 files={"image": ("input.png", raw)},
-                data={"prompt": prompt, **({"strength": strength} if strength else {})},
+                data={"prompt": prompt},
                 timeout=600,
             )
             r.raise_for_status()
