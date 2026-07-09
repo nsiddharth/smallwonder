@@ -29,15 +29,19 @@ def install_python_tools() -> None:
             "smallwonder needs `uv` (https://docs.astral.sh/uv). "
             "Install with: brew install uv"
         )
+    # Versions pinned to the combination verified end-to-end (see CONTRIBUTING
+    # for the bump procedure). Isolated uv tool envs — no interference with
+    # anything else on the machine.
     subprocess.run(
-        ["uv", "tool", "install", "--python", "3.12", "--with", "semantic-router",
-         "litellm[proxy]"],
+        ["uv", "tool", "install", "--python", "3.12",
+         "--with", "semantic-router==0.1.15", "litellm[proxy]==1.91.0"],
         check=True,
     )
     subprocess.run(
         # numpy<2: Open WebUI's torch wheel breaks against numpy 2.x
         # ("Numpy is not available" on any RAG/knowledge operation)
-        ["uv", "tool", "install", "--python", "3.12", "--with", "numpy<2", "open-webui"],
+        ["uv", "tool", "install", "--python", "3.12", "--with", "numpy<2",
+         "open-webui==0.6.41"],
         check=True,
     )
 

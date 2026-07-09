@@ -52,10 +52,18 @@ def setup(
     yes: bool = typer.Option(False, "--yes", "-y", help="Accept all defaults, no prompts"),
 ):
     """Install and configure the full stack (idempotent — rerun anytime)."""
+    from smallwonder import preflight
     from smallwonder.backends.base import get_backend
     from smallwonder.services import stack
 
     ensure_dirs()
+    failures = preflight.check(Config.load_or_default().ports)
+    if failures:
+        console.print("[red bold]This system can't run smallwonder:[/red bold]")
+        for f in failures:
+            console.print(f"  ❌ {f.what}: {f.detail}\n     [yellow]{f.remedy}[/yellow]")
+        raise typer.Exit(2)
+
     ram = tiers_mod.machine_ram_gb()
     chosen_tier = tier or tiers_mod.pick_tier(ram)
     disk = tiers_mod.tier_disk_gb(chosen_tier)

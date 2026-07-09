@@ -39,10 +39,24 @@ Then open http://localhost:8080 and talk to it, or point any OpenAI client at
 - **Optional daily news brief**: RSS → digested by your own models → RAG
   collection, so answers stay current without sending queries anywhere.
 
-## Requirements
+## Requirements (checked before anything installs)
 
-- Apple Silicon Mac, 16GB+ RAM (48GB recommended for the full experience)
-- macOS 14+, [Homebrew](https://brew.sh), ~25-45GB disk for models
+`smallwonder setup` runs a preflight and **refuses to install** on
+incompatible systems rather than failing halfway:
+
+| Requirement | Why |
+|---|---|
+| **Apple Silicon** (M1 or newer) | Models run on the unified-memory GPU; Intel Macs are refused |
+| **macOS 14+** (Sonoma) | Runtime + launchd APIs |
+| **16GB+ RAM** (48GB for the top tier) | Below 16GB no useful model fits |
+| **[Homebrew](https://brew.sh) + [uv](https://docs.astral.sh/uv)** (`brew install uv`) | The brew formula installs both for you |
+| **10-45GB free disk** (by tier) | Model weights; checked with a margin before download |
+| Ports 1234, 4000, 8080 free | Checked; conflicts are reported with the owning process |
+
+Dependency hygiene: the CLI itself is pure Python (no compiled deps). The
+heavy services (LiteLLM, Open WebUI) are installed at **pinned,
+end-to-end-verified versions** into isolated `uv` tool environments — they
+can't conflict with your system Python, conda, or anything else.
 
 ## Commands
 
