@@ -13,6 +13,15 @@ brew install nsiddharth/smallwonder/smallwonder
 smallwonder setup
 ```
 
+No Homebrew, or brew refuses with "arm64 architecture is required" (Intel-era
+brew in `/usr/local` on a migrated Mac)? Install with [uv](https://docs.astral.sh/uv)
+directly — same result:
+
+```sh
+uv tool install https://github.com/nsiddharth/smallwonder/archive/refs/tags/v0.1.0.tar.gz
+smallwonder setup
+```
+
 Then open http://localhost:8080 and talk to it, or point any OpenAI client at
 `http://localhost:4000/v1`.
 
