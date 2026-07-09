@@ -37,6 +37,7 @@ class Config:
             "drawthings": 7860,
         }
     )
+    context_tokens: int = 65536  # default context for loaded models (KV RAM vs headroom)
     # role -> model spec name; resolved from tier at setup, editable afterwards
     models: dict = field(default_factory=dict)
     modules: dict = field(default_factory=lambda: {"image": False, "news": False})

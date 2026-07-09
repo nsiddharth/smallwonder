@@ -89,7 +89,8 @@ def test_llamaswap_yaml_valid():
     }
     out = yaml.safe_load(
         env.get_template("llama-swap.yaml.j2").render(
-            ports=Config().ports, models=models, llama_server_bin="/opt/bin/llama-server"
+            ports=Config().ports, models=models,
+            llama_server_bin="/opt/bin/llama-server", context_tokens=65536,
         )
     )
     assert out["listen"].endswith(":1234")

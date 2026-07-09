@@ -40,12 +40,14 @@ class LMStudioBackend(Backend):
             return
         self._lms("get", model_ref, "--mlx", "-y")
 
-    def _ensure_default_context(self, tokens: int = 32768) -> None:
+    def _ensure_default_context(self, tokens: int | None = None) -> None:
         """Raise LM Studio's JIT default context (ships at 8192, which vision
         prompts overflow — images can't be truncated, so requests hard-fail
         with a context-overflow policy error)."""
         import json
 
+        if tokens is None:
+            tokens = getattr(self.cfg, "context_tokens", 65536)
         path = Path.home() / ".lmstudio" / "settings.json"
         try:
             settings = json.loads(path.read_text()) if path.exists() else {}
@@ -78,8 +80,9 @@ class LMStudioBackend(Backend):
         # Instances loaded before a context raise keep their old (small)
         # context and hard-fail vision prompts; evict them so the next
         # request JIT-loads at the new default.
+        want = getattr(self.cfg, "context_tokens", 65536)
         for m in self.loaded_models():
-            if (m.get("contextLength") or 0) < 32768:
+            if (m.get("contextLength") or 0) < want:
                 self._lms("unload", m.get("identifier", ""), quiet=True, check=False)
 
     def stop(self) -> None:

@@ -200,10 +200,11 @@ def doctor():
     if cfg.backend == "lmstudio":
         from smallwonder.backends.lmstudio import LMStudioBackend
 
+        want = getattr(cfg, "context_tokens", 65536)
         for m in LMStudioBackend(cfg).loaded_models():
             ctx = m.get("contextLength") or 0
             checks.append(
-                (f"context ≥32K: {m.get('identifier')} ({ctx})", ctx >= 32768,
+                (f"context ≥{want}: {m.get('identifier')} ({ctx})", ctx >= want,
                  "smallwonder up  (stale small-context instance breaks image/vision prompts)")
             )
 

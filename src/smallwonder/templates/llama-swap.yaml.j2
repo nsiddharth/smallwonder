@@ -4,7 +4,7 @@
 listen: "127.0.0.1:{{ ports.backend }}"
 
 macros:
-  llama: "{{ llama_server_bin }} --port ${PORT} -ngl 999 --ctx-size 16384"
+  llama: "{{ llama_server_bin }} --port ${PORT} -ngl 999 --ctx-size {{ context_tokens }}"
 
 models:
 {% for role, ref in models.items() if role != "embed" %}

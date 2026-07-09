@@ -44,6 +44,7 @@ class LlamaSwapBackend(Backend):
             ports=self.cfg.ports,
             models=self.cfg.models,
             llama_server_bin=_which("llama-server") or "llama-server",
+            context_tokens=getattr(self.cfg, "context_tokens", 65536),
         )
         cfg_path.write_text(rendered)
         return str(cfg_path)
