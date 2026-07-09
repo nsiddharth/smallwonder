@@ -54,9 +54,11 @@ class OpenWebUI:
 
     # --- knowledge (RAG collections) ----------------------------------------
     def find_or_create_knowledge(self, name: str, description: str) -> str:
-        r = self.get("/api/v1/knowledge/list")
+        r = self.get("/api/v1/knowledge/")
         r.raise_for_status()
-        for item in r.json():
+        data = r.json()
+        items = data.get("items", data) if isinstance(data, dict) else data
+        for item in items:
             if item.get("name") == name:
                 return item["id"]
         r = self.post(

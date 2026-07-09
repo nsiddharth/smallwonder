@@ -35,7 +35,9 @@ def install_python_tools() -> None:
         check=True,
     )
     subprocess.run(
-        ["uv", "tool", "install", "--python", "3.12", "open-webui"],
+        # numpy<2: Open WebUI's torch wheel breaks against numpy 2.x
+        # ("Numpy is not available" on any RAG/knowledge operation)
+        ["uv", "tool", "install", "--python", "3.12", "--with", "numpy<2", "open-webui"],
         check=True,
     )
 
