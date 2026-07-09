@@ -38,7 +38,7 @@ class OpenWebUI:
 
     # --- image config ------------------------------------------------------
     def enable_image_generation(self, shim_base: str) -> None:
-        """Point Open WebUI's image engine at the OpenAI-images shim."""
+        """Point Open WebUI's image create AND edit engines at the shim."""
         current = self.get("/api/v1/images/config").json()
         current.update(
             ENABLE_IMAGE_GENERATION=True,
@@ -49,6 +49,15 @@ class OpenWebUI:
             IMAGES_OPENAI_API_BASE_URL=shim_base,
             IMAGES_OPENAI_API_KEY="none",
         )
+        for k, v in {
+            "ENABLE_IMAGE_EDIT": True,
+            "IMAGE_EDIT_ENGINE": "openai",
+            "IMAGE_EDIT_MODEL": "draw-things",
+            "IMAGES_EDIT_OPENAI_API_BASE_URL": shim_base,
+            "IMAGES_EDIT_OPENAI_API_KEY": "none",
+        }.items():
+            if k in current:  # keys exist on Open WebUI >= 0.6.x
+                current[k] = v
         r = self.post("/api/v1/images/config/update", json=current)
         r.raise_for_status()
 

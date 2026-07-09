@@ -50,10 +50,22 @@ def install(
     path = plist_path(name)
     uninstall(name)  # bootout stale instance before overwriting
     path.write_text(rendered)
-    subprocess.run(
-        ["launchctl", "bootstrap", f"gui/{_uid()}", str(path)],
-        capture_output=True,
-        check=True,
+    # bootout is asynchronous: an immediate bootstrap can fail with EIO (5)
+    # while the old instance is still terminating. Retry briefly.
+    import time
+
+    last = None
+    for _ in range(10):
+        last = subprocess.run(
+            ["launchctl", "bootstrap", f"gui/{_uid()}", str(path)],
+            capture_output=True,
+        )
+        if last.returncode == 0:
+            return
+        time.sleep(1)
+    raise RuntimeError(
+        f"launchctl bootstrap {label(name)} failed after retries: "
+        f"{(last.stderr or b'').decode().strip()}"
     )
 
 

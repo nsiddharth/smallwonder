@@ -51,6 +51,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/smallwonder/tiers.py" = ["E501"]
+"src/smallwonder/shim/dt_openai_shim.py" = ["B008"]  # FastAPI Form/File defaults idiom
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
