@@ -40,7 +40,27 @@ class LMStudioBackend(Backend):
             return
         self._lms("get", model_ref, "--mlx", "-y")
 
+    def _ensure_default_context(self, tokens: int = 32768) -> None:
+        """Raise LM Studio's JIT default context (ships at 8192, which vision
+        prompts overflow — images can't be truncated, so requests hard-fail
+        with a context-overflow policy error)."""
+        import json
+
+        path = Path.home() / ".lmstudio" / "settings.json"
+        try:
+            settings = json.loads(path.read_text()) if path.exists() else {}
+        except json.JSONDecodeError:
+            return
+        current = (settings.get("defaultContextLength") or {}).get("value", 0)
+        if current >= tokens:
+            return
+        settings["defaultContextLength"] = {"type": "custom", "value": tokens}
+        path.write_text(json.dumps(settings, indent=2))
+        # daemon rereads settings lazily; bounce it so JIT loads pick this up
+        self._lms("daemon", "stop", quiet=True, check=False)
+
     def start(self) -> None:
+        self._ensure_default_context()
         self._lms("daemon", "up", quiet=True, check=False)
         self._lms("server", "start", "--port", str(self.cfg.ports["backend"]), quiet=True)
 

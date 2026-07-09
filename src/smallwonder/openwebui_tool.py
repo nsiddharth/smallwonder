@@ -62,6 +62,88 @@ class Tools:
             "Briefly (one sentence) tell the user what you created. Do NOT "
             "output the image data yourself."
         )
+
+    async def edit_image(
+        self,
+        prompt: str,
+        strength: float = 0.75,
+        __messages__=None,
+        __files__=None,
+        __event_emitter__=None,
+    ) -> str:
+        """
+        Edit or transform the image the user attached to this chat, guided by
+        a text instruction. Use this whenever the user asks you to modify,
+        edit, change, restyle, retouch or transform a photo or image they
+        uploaded (e.g. "give him a haircut", "make it night", "turn this into
+        a watercolor").
+        :param prompt: What the edited image should look like — describe the desired RESULT as a full scene, not just the change.
+        :param strength: How much to change the image, 0.3 = subtle touch-up, 0.9 = heavy transformation. Default 0.75.
+        """
+        # Find the most recent image the user attached (multimodal message
+        # content first, then chat file attachments).
+        source = None
+        for msg in reversed(__messages__ or []):
+            content = msg.get("content")
+            if isinstance(content, list):
+                for part in reversed(content):
+                    url = (part.get("image_url") or {}).get("url", "") if isinstance(part, dict) else ""
+                    if url.startswith("data:image"):
+                        source = url
+                        break
+            if source:
+                break
+        if not source:
+            for f in reversed(__files__ or []):
+                url = f.get("url", "") if isinstance(f, dict) else ""
+                if url.startswith("data:image"):
+                    source = url
+                    break
+        if not source:
+            return (
+                "No attached image found in this chat. Ask the user to attach "
+                "the image they want edited (the + button), then try again."
+            )
+
+        if __event_emitter__:
+            await __event_emitter__(
+                {"type": "status",
+                 "data": {"description": "Editing image locally…", "done": False}}
+            )
+        header, b64_in = source.split(",", 1)
+        ext = "png" if "png" in header else "jpeg"
+        try:
+            r = requests.post(
+                "{shim_base}/images/edits",
+                files={"image": (f"input.{ext}", __import__("base64").b64decode(b64_in))},
+                data={"prompt": prompt, "strength": strength},
+                timeout=600,
+            )
+            r.raise_for_status()
+            b64 = r.json()["data"][0]["b64_json"]
+        except Exception as e:
+            if __event_emitter__:
+                await __event_emitter__(
+                    {"type": "status",
+                     "data": {"description": f"Image edit failed: {e}", "done": True}}
+                )
+            return (
+                f"Image editing failed ({e}). Tell the user the image engine "
+                "may be off — they can run `smallwonder doctor`."
+            )
+        if __event_emitter__:
+            await __event_emitter__(
+                {"type": "message",
+                 "data": {"content": f"\\n![edited image](data:image/png;base64,{b64})\\n"}}
+            )
+            await __event_emitter__(
+                {"type": "status", "data": {"description": "Edit ready", "done": True}}
+            )
+        return (
+            "The edited image was created and is already displayed in the "
+            "chat. Briefly (one sentence) describe the edit you made. Do NOT "
+            "output the image data yourself."
+        )
 '''
 
 

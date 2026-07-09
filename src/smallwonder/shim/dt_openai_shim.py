@@ -80,6 +80,28 @@ def _parse_size(size: str | None) -> tuple[int | None, int | None]:
         raise HTTPException(status_code=400, detail=f"bad size: {size!r}") from None
 
 
+def _image_dimensions(data: bytes) -> tuple[int | None, int | None]:
+    """Width/height from PNG or JPEG headers (no imaging library needed).
+    Draw Things requires the request width/height to match the init image."""
+    import struct
+
+    if data[:8] == b"\x89PNG\r\n\x1a\n":  # PNG: IHDR is the first chunk
+        w, h = struct.unpack(">II", data[16:24])
+        return w, h
+    if data[:2] == b"\xff\xd8":  # JPEG: scan for a SOFn marker
+        i = 2
+        while i + 9 < len(data):
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+                h, w = struct.unpack(">HH", data[i + 5 : i + 9])
+                return w, h
+            i += 2 + struct.unpack(">H", data[i + 2 : i + 4])[0]
+    return None, None
+
+
 @app.post("/v1/images/edits")
 async def edits(
     prompt: str = Form(...),
@@ -92,7 +114,8 @@ async def edits(
 ):
     """OpenAI images-edit contract (multipart, as Open WebUI sends it),
     backed by Draw Things img2img. First image is the init image."""
-    init = base64.b64encode(await image[0].read()).decode()
+    raw = await image[0].read()
+    init = base64.b64encode(raw).decode()
     payload = {
         "init_images": [init],
         "prompt": prompt,
@@ -102,6 +125,10 @@ async def edits(
         "denoising_strength": strength,
     }
     w, h = _parse_size(size)
+    if not (w and h):
+        # Draw Things rejects a canvas that doesn't match the init image,
+        # so default to the source image's own dimensions.
+        w, h = _image_dimensions(raw)
     if w and h:
         payload["width"], payload["height"] = w, h
     r = requests.post(f"{DRAW_THINGS}/sdapi/v1/img2img", json=payload, timeout=600)
