@@ -77,6 +77,7 @@ smallwonder doctor       # diagnose known failure modes
 smallwonder evals        # golden-prompt quality suite
 smallwonder models add <ref> [--role coder]
 smallwonder image enable # Draw Things + OpenAI-images shim
+smallwonder voice enable # local TTS: read-aloud + hands-free Call mode
 smallwonder news enable  # daily local news digest
 smallwonder tutorial     # print the quick-start card
 ```

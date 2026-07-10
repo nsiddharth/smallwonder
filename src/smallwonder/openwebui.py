@@ -72,6 +72,27 @@ class OpenWebUI:
         r = self.post("/api/v1/tasks/config/update", json=current)
         r.raise_for_status()
 
+    # --- audio (TTS/STT) -----------------------------------------------------
+    def enable_tts(self, tts_base: str, model: str, voice: str) -> None:
+        """Point Open WebUI's TTS at a local OpenAI-compatible speech server.
+        STT stays on the built-in local Whisper. Preserves unknown keys by
+        round-tripping the current config."""
+        current = self.get("/api/v1/audio/config").json()
+        tts = current.get("tts", {})
+        tts.update(
+            ENGINE="openai",
+            OPENAI_API_BASE_URL=tts_base,
+            OPENAI_API_KEY="none",
+            MODEL=model,
+            VOICE=voice,
+            # wav needs no ffmpeg on the TTS server (mp3, the OpenAI
+            # default, does); merged into the /audio/speech payload
+            OPENAI_PARAMS={"response_format": "wav"},
+        )
+        current["tts"] = tts
+        r = self.post("/api/v1/audio/config/update", json=current)
+        r.raise_for_status()
+
     # --- knowledge (RAG collections) ----------------------------------------
     def find_or_create_knowledge(self, name: str, description: str) -> str:
         r = self.get("/api/v1/knowledge/")

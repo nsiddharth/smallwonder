@@ -18,6 +18,8 @@ news_app = typer.Typer(no_args_is_help=True)
 models_app = typer.Typer(no_args_is_help=True)
 app.add_typer(image_app, name="image", help="Image generation module (Draw Things)")
 app.add_typer(news_app, name="news", help="Daily news brief module")
+voice_app = typer.Typer(no_args_is_help=True)
+app.add_typer(voice_app, name="voice", help="Voice output module (local TTS)")
 app.add_typer(models_app, name="models", help="Manage models behind the roles")
 
 console = Console()
@@ -194,6 +196,7 @@ def doctor():
             "ui": "check ~/.smallwonder/logs/openwebui.log (first boot takes ~2min)",
             "drawthings": "open Draw Things app + enable its API server in Settings",
             "image_shim": "smallwonder up",
+            "tts": "smallwonder voice enable (or check ~/.smallwonder/logs/tts.log)",
         }.get(name, "")
         checks.append((f"service: {name}", ok, fix))
 
@@ -301,6 +304,35 @@ def image_disable():
     stack.render_router_configs(cfg)
     launchd.kickstart("litellm")
     console.print("image module disabled")
+
+
+# --- voice module ---------------------------------------------------------------
+@voice_app.command("enable")
+def voice_enable():
+    """Local TTS: replies can be read aloud; enables hands-free Call mode."""
+    from smallwonder.modules import voice
+
+    cfg = Config.load()
+    steps = voice.enable(cfg)
+    for s_ in steps:
+        console.print(Panel(s_, border_style="yellow"))
+    if not steps:
+        console.print(
+            "voice enabled — sample at ~/.smallwonder/voice-sample.wav\n"
+            "In Open WebUI: speaker icon under any reply reads it aloud; "
+            "headphones icon in a new chat starts Call mode."
+        )
+
+
+@voice_app.command("disable")
+def voice_disable():
+    from smallwonder.modules import voice
+
+    cfg = Config.load()
+    cfg.modules["voice"] = False
+    cfg.save()
+    voice.stop()
+    console.print("voice module disabled")
 
 
 # --- news module --------------------------------------------------------------
