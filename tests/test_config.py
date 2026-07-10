@@ -30,3 +30,19 @@ def test_load_missing_raises(tmp_path, monkeypatch):
     except FileNotFoundError:
         pass
     assert Config.load_or_default().backend == "lmstudio"
+
+
+def test_old_config_gains_new_keys(tmp_path, monkeypatch):
+    """Upgrade path: a config saved by an older version must pick up
+    newly-introduced ports/modules instead of KeyError-ing."""
+    monkeypatch.setattr(config_mod, "CONFIG_PATH", tmp_path / "config.yaml")
+    (tmp_path / "config.yaml").write_text(
+        "backend: lmstudio\n"
+        "ports: {backend: 1234, router: 4000, ui: 8080}\n"   # pre-tts era
+        "modules: {image: true}\n"
+    )
+    cfg = Config.load()
+    assert cfg.ports["tts"] == 8880          # new key from defaults
+    assert cfg.ports["ui"] == 8080           # saved value wins
+    assert cfg.modules["image"] is True
+    assert cfg.modules["voice"] is False     # new module key present

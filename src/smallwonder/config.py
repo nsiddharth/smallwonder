@@ -35,12 +35,13 @@ class Config:
             "ui": 8080,
             "image_shim": 7861,
             "drawthings": 7860,
+            "tts": 8880,
         }
     )
     context_tokens: int = 65536  # default context for loaded models (KV RAM vs headroom)
     # role -> model spec name; resolved from tier at setup, editable afterwards
     models: dict = field(default_factory=dict)
-    modules: dict = field(default_factory=lambda: {"image": False, "news": False})
+    modules: dict = field(default_factory=lambda: {"image": False, "news": False, "voice": False})
     news: dict = field(default_factory=lambda: {"feeds": list(DEFAULT_FEEDS), "hour": 6})
 
     @classmethod
@@ -52,7 +53,14 @@ class Config:
         data = yaml.safe_load(CONFIG_PATH.read_text()) or {}
         cfg = cls()
         for k, v in data.items():
-            if hasattr(cfg, k):
+            if not hasattr(cfg, k):
+                continue
+            default = getattr(cfg, k)
+            if isinstance(default, dict) and isinstance(v, dict):
+                # merge over defaults so configs saved by older versions
+                # pick up newly-introduced keys (ports, modules, ...)
+                setattr(cfg, k, {**default, **v})
+            else:
                 setattr(cfg, k, v)
         return cfg
 

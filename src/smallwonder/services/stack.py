@@ -103,12 +103,16 @@ def up(cfg: Config) -> None:
         from smallwonder.modules.news import install_timer
 
         install_timer(cfg)
+    if cfg.modules.get("voice"):
+        from smallwonder.modules import voice
+
+        voice.start(cfg)
 
 
 def down(cfg: Config) -> None:
     from smallwonder.services import launchd
 
-    for name in ("news", "imageshim", "openwebui", "litellm", "llamaswap"):
+    for name in ("news", "tts", "imageshim", "openwebui", "litellm", "llamaswap"):
         launchd.uninstall(name)
     get_backend(cfg).stop()
 
@@ -133,11 +137,16 @@ def health(cfg: Config) -> dict[str, bool]:
             out[name] = httpx.get(url, timeout=5).status_code == 200
         except httpx.HTTPError:
             out[name] = False
+    extra = []
     if cfg.modules.get("image"):
-        for name, url in [
+        extra += [
             ("drawthings", f"http://127.0.0.1:{cfg.ports['drawthings']}/"),
             ("image_shim", f"http://127.0.0.1:{cfg.ports['image_shim']}/health"),
-        ]:
+        ]
+    if cfg.modules.get("voice"):
+        extra.append(("tts", f"http://127.0.0.1:{cfg.ports['tts']}/v1/models"))
+    if extra:
+        for name, url in extra:
             try:
                 out[name] = httpx.get(url, timeout=5).status_code == 200
             except httpx.HTTPError:
